@@ -1,37 +1,49 @@
 /**
- * Docusaurus Code Block Fullscreen Plugin
- * Automatically adds fullscreen functionality to Docusaurus code blocks
- * 
+ * Docusaurus Fullscreen Plugin - Client Side
+ * This module adds fullscreen functionality to code blocks
  */
 
-export default (function() {
-  'use strict';
+import './fullscreen.module.css';
+
+(function () {
+  "use strict";
   
   // Check if we're in a Docusaurus environment
-  if (!document.querySelector('[data-theme]') && !document.querySelector('.docusaurus')) {
-    console.warn('Docusaurus fullscreen script: Not detected in Docusaurus environment');
+  if (
+    !document.querySelector("[data-theme]") &&
+    !document.querySelector(".docusaurus")
+  ) {
+    console.warn(
+      "Docusaurus fullscreen script: Not detected in Docusaurus environment"
+    );
     return;
   }
-  
+
   // Avoid duplicate initialization
   if (window.docusaurusCodeFullscreenInitialized) return;
   window.docusaurusCodeFullscreenInitialized = true;
 
   // Configuration options
-  const config = {
-    fullscreenButtonTooltip: 'Toggle fullscreen view',
-    fullscreenContainerClass: 'docusaurus-code-fullscreen-container',
-    fullscreenActiveClass: 'docusaurus-code-fullscreen-active',
+  const defaultConfig = {
+    fullscreenButtonTooltip: "Toggle fullscreen view",
+    fullscreenContainerClass: "docusaurus-code-fullscreen-container",
     enableEscapeKey: true,
-    enableBackButton: true,
-    // Docusaurus-specific selectors
-    codeBlockSelector: '.theme-code-block, .prism-code, pre[class*="language-"]',
-    codeBlockHeaderSelector: '.theme-code-block-title, .code-block-title, .prism-code-title',
-    codeBlockContainerSelector: '.theme-code-block, [class*="codeBlockContainer"]',
+    exitOnBrowserBack: true,
+    addToFramelessBlocks: true,
+    fullscreenZoomLevel: 150,
+    animationDuration: 150,
+    svgPathFullscreenOn:
+      "M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z",
+    svgPathFullscreenOff:
+      "M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z",
   };
 
   // Override with custom config if provided
-  Object.assign(config, window.DocusaurusCodeFullscreenConfig || {});
+  const config = Object.assign(
+    {},
+    defaultConfig,
+    window.DocusaurusCodeFullscreenConfig || {}
+  );
 
   // Initialize fullscreen state
   const fullscreenState = {
@@ -39,265 +51,393 @@ export default (function() {
     scrollPosition: 0,
     originalCodeBlock: null,
     currentTheme: null,
+    currentZoom: 100,
+    focusTrapHandler: null,
   };
 
-  // Get current Docusaurus theme
-  function getCurrentTheme() {
-    const htmlElement = document.documentElement;
-    return htmlElement.getAttribute('data-theme') || 'light';
+  /**
+   * Zoom management for fullscreen functionality.
+   */
+  const zoomManager = {
+    storageKey: "docusaurusCodeFullscreenZoom",
+
+    /**
+     * Get current browser zoom level as percentage.
+     * @returns {number} Zoom level (100 = 100%)
+     */
+    getCurrentZoom() {
+      return Math.round(window.devicePixelRatio * 100);
+    },
+
+    /**
+     * Get stored zoom data from localStorage.
+     * @returns {object} Zoom data object
+     */
+    getZoomData() {
+      try {
+        const data = localStorage.getItem(this.storageKey);
+        return data ? JSON.parse(data) : {};
+      } catch (e) {
+        return {};
+      }
+    },
+
+    /**
+     * Store initial zoom level.
+     * @param {number} zoom Zoom level to store
+     */
+    storeInitialZoom(zoom) {
+      const data = this.getZoomData();
+      data.initialZoom = zoom;
+      try {
+        localStorage.setItem(this.storageKey, JSON.stringify(data));
+      } catch (e) {
+        console.warn("Could not store zoom level in localStorage.");
+      }
+    },
+
+    /**
+     * Get stored initial zoom level.
+     * @returns {number|null} Initial zoom level or null if not stored
+     */
+    getStoredInitialZoom() {
+      const data = this.getZoomData();
+      return data.initialZoom || null;
+    },
+
+    /**
+     * Set zoom level using CSS.
+     * @param {number} level Zoom level (100 = 100%)
+     */
+    setZoom(level) {
+      document.body.style.zoom = `${level}%`;
+    },
+
+    /**
+     * Remove zoom styling to restore natural browser zoom.
+     */
+    removeZoomStyling() {
+      document.body.style.zoom = "";
+    },
+
+    /**
+     * Initialize zoom manager.
+     */
+    init() {
+      const currentZoom = this.getCurrentZoom();
+      const storedInitial = this.getStoredInitialZoom();
+
+      if (!storedInitial) {
+        this.storeInitialZoom(currentZoom);
+      }
+    },
+  };
+
+      // Get current Docusaurus theme
+    function getCurrentTheme() {
+      const htmlElement = document.documentElement;
+      const theme = htmlElement.getAttribute("data-theme");
+      
+      // If no theme attribute, try to detect from body classes or other indicators
+      if (!theme) {
+        if (document.body.classList.contains('dark')) return 'dark';
+        if (document.body.classList.contains('light')) return 'light';
+        // Check for dark mode media query as fallback
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
+      }
+      
+      return theme || "light";
+    }
+
+  /**
+   * Set zoom to configured level for fullscreen mode.
+   */
+  function setFullscreenZoom() {
+    const currentZoom = zoomManager.getCurrentZoom();
+    fullscreenState.currentZoom = currentZoom;
+
+    // Set to configured zoom level for fullscreen.
+    zoomManager.setZoom(config.fullscreenZoomLevel);
   }
 
-  // CSS styles for fullscreen functionality with Docusaurus theme integration
-  const styles = `
-    .${config.fullscreenContainerClass} {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 9999;
-      overflow: auto;
-      padding: 20px;
-      box-sizing: border-box;
-      transition: opacity 0.2s ease;
-    }
+  /**
+   * Restore zoom to the initial state.
+   */
+  function restoreInitialZoom() {
+    const initialZoom = zoomManager.getStoredInitialZoom();
 
-    .${config.fullscreenContainerClass}.is-open {
-      display: block;
-      opacity: 1;
+    if (initialZoom) {
+      zoomManager.setZoom(initialZoom);
+    } else {
+      // Fallback: remove zoom styling.
+      zoomManager.removeZoomStyling();
     }
-
-    .${config.fullscreenContainerClass}:not(.is-open) {
-      opacity: 0;
-    }
-
-    /* Theme-aware background colors */
-    [data-theme='light'] .${config.fullscreenContainerClass} {
-      background-color: var(--ifm-background-color, #ffffff);
-      color: var(--ifm-font-color-base, #1c1e21);
-    }
-
-    [data-theme='dark'] .${config.fullscreenContainerClass} {
-      background-color: var(--ifm-background-color, #1b1b1d);
-      color: var(--ifm-font-color-base, #ffffff);
-    }
-
-    .${config.fullscreenActiveClass} {
-      width: 100% !important;
-      max-width: none !important;
-      height: auto !important;
-      margin: 0 !important;
-      border-radius: var(--ifm-code-border-radius, 4px) !important;
-    }
-
-    .docusaurus-fullscreen-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      padding: 4px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      opacity: 0.7;
-      transition: opacity 0.2s, background-color 0.2s;
-      border-radius: var(--ifm-button-border-radius, 4px);
-      color: var(--ifm-font-color-base);
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 1;
-    }
-
-    .docusaurus-fullscreen-button:hover {
-      opacity: 1;
-      background-color: var(--ifm-color-emphasis-200);
-    }
-
-    .docusaurus-fullscreen-button:focus {
-      outline: 2px solid var(--ifm-color-primary);
-      outline-offset: 2px;
-    }
-
-    .docusaurus-fullscreen-button .fullscreen-on {
-      display: inline;
-    }
-
-    .docusaurus-fullscreen-button .fullscreen-off {
-      display: none;
-    }
-
-    .${config.fullscreenActiveClass} .docusaurus-fullscreen-button .fullscreen-on {
-      display: none;
-    }
-
-    .${config.fullscreenActiveClass} .docusaurus-fullscreen-button .fullscreen-off {
-      display: inline;
-    }
-
-    /* Ensure code block title has relative positioning for button placement */
-    .theme-code-block-title,
-    .code-block-title,
-    .prism-code-title {
-      position: relative;
-    }
-
-    /* Style for when there's no title - create a minimal header */
-    .docusaurus-fullscreen-header {
-      position: relative;
-      padding: 8px 12px 8px 16px;
-      background: var(--ifm-color-emphasis-100);
-      border-bottom: 1px solid var(--ifm-color-emphasis-200);
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      min-height: 20px;
-      font-family: var(--ifm-font-family-monospace);
-      font-size: 0.75rem;
-      border-radius: var(--ifm-code-border-radius, 4px) var(--ifm-code-border-radius, 4px) 0 0;
-    }
-
-    [data-theme='dark'] .docusaurus-fullscreen-header {
-      background: var(--ifm-color-emphasis-100);
-      border-bottom-color: var(--ifm-color-emphasis-200);
-    }
-
-    /* Adjust for Docusaurus code block structure */
-    .theme-code-block {
-      position: relative;
-    }
-
-    /* Handle copy button positioning when fullscreen button is present */
-    .theme-code-block .theme-code-block-title ~ div .clean-btn {
-      right: 40px !important;
-    }
-
-    .docusaurus-fullscreen-header + div .clean-btn {
-      right: 40px !important;
-    }
-  `;
-
-  // Create and inject styles
-  function injectStyles() {
-    if (document.getElementById('docusaurus-code-fullscreen-styles')) return;
-    
-    const styleSheet = document.createElement('style');
-    styleSheet.id = 'docusaurus-code-fullscreen-styles';
-    styleSheet.textContent = styles;
-    document.head.appendChild(styleSheet);
   }
 
   // Create fullscreen container
   function createFullscreenContainer() {
     if (document.querySelector(`.${config.fullscreenContainerClass}`)) return;
-    
-    const container = document.createElement('div');
+
+    const container = document.createElement("div");
     container.className = config.fullscreenContainerClass;
-    container.setAttribute('data-theme', getCurrentTheme());
+    container.setAttribute("role", "dialog");
+    container.setAttribute("aria-modal", "true");
+    container.setAttribute("aria-label", "Code block in fullscreen view");
+    container.setAttribute("tabindex", "-1");
+    container.setAttribute("data-theme", getCurrentTheme());
     document.body.appendChild(container);
+  }
+
+  // Create hint element for fullscreen mode
+  function createFullscreenHint() {
+    const hint = document.createElement("div");
+    hint.className = "docusaurus-fullscreen-hint";
+    hint.innerHTML = "Press <kbd>Esc</kbd> to exit full screen";
+    return hint;
   }
 
   // Create fullscreen button HTML
   function createFullscreenButton() {
-    const button = document.createElement('button');
-    button.className = 'docusaurus-fullscreen-button';
-    button.type = 'button';
-    button.setAttribute('aria-label', config.fullscreenButtonTooltip);
-    button.title = config.fullscreenButtonTooltip;
-    
+    const button = document.createElement("button");
+    button.className = "docusaurus-fullscreen-button";
+    button.type = "button";
+    button.setAttribute("aria-label", config.fullscreenButtonTooltip);
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("data-tooltip", config.fullscreenButtonTooltip);
+
     button.innerHTML = `
-      <svg class="fullscreen-on" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" d="M16 3h6v6h-2V5h-4V3zM2 3h6v2H4v4H2V3zm18 16v-4h2v6h-6v-2h4zM4 19h4v2H2v-6h2v4z"/>
-      </svg>
-      <svg class="fullscreen-off" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" d="M18 7h4v2h-6V3h2v4zM8 9H2V7h4V3h2v6zm10 8v4h-2v-6h6v2h-4zM8 15v6H6v-4H2v-2h6z"/>
-      </svg>
-    `;
-    
+        <svg class="fullscreen-on" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="${config.svgPathFullscreenOn}"/>
+        </svg>
+        <svg class="fullscreen-off" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="${config.svgPathFullscreenOff}"/>
+        </svg>
+      `;
+
     return button;
   }
 
   // Find the appropriate code block container
   function findCodeBlockContainer(element) {
-    return element.closest('.theme-code-block') || 
-           element.closest('[class*="codeBlockContainer"]') ||
-           element.closest('.prism-code')?.parentElement ||
-           element.closest('pre')?.parentElement;
+    return (
+      element.closest(".theme-code-block") ||
+      element.closest('[class*="codeBlockContainer"]') ||
+      element.closest(".prism-code")?.parentElement ||
+      element.closest("pre")?.parentElement
+    );
   }
 
   // Add fullscreen button to a code block
   function addFullscreenButtonToBlock(codeBlock) {
     const container = findCodeBlockContainer(codeBlock);
-    if (!container || container.querySelector('.docusaurus-fullscreen-button')) return;
-    
-    // Find existing title/header
-    let header = container.querySelector(config.codeBlockHeaderSelector);
-    
+    console.log(container);
+    if (!container || container.querySelector(".docusaurus-fullscreen-button"))
+      return;
+
+    // First, check for codeBlockTitle class element (with hash suffix)
+    let header = container.querySelector('[class*="codeBlockTitle_"]');
+    console.log("header:", header);
+
+    // If no codeBlockTitle, fall back to other header selectors
+    if (!header) {
+      header = container.querySelector(
+        '[class*="codeBlockTitle_"], .theme-code-block-title, .code-block-title, .prism-code-title'
+      );
+    }
+
+    // Check if the code block has a title/header
+    const hasHeaderArea = !!header;
+
+    // If configured to only add to titled blocks, skip blocks without titles or terminal
+    // if (!config.addToFramelessBlocks && !hasHeaderArea) {
+    //   return;
+    // }
+
     if (!header) {
       // Check if there's a title attribute or data-title
-      const pre = container.querySelector('pre');
-      const title = pre?.getAttribute('title') || 
-                   pre?.getAttribute('data-title') || 
-                   container.getAttribute('data-title');
-      
+      const pre = container.querySelector("pre");
+      const title =
+        pre?.getAttribute("title") ||
+        pre?.getAttribute("data-title") ||
+        container.getAttribute("data-title");
+
       if (title) {
         // Create a title header
-        header = document.createElement('div');
-        header.className = 'theme-code-block-title';
+        header = document.createElement("div");
+        header.className = "theme-code-block-title";
         header.textContent = title;
-        header.style.position = 'relative';
+        header.style.position = "relative";
         container.insertBefore(header, container.firstChild);
-      } else {
+      } else if (hasHeaderArea || config.addToFramelessBlocks) {
         // Create minimal header for button placement
-        header = document.createElement('div');
-        header.className = 'docusaurus-fullscreen-header';
+        header = document.createElement("div");
+        header.className = "docusaurus-fullscreen-header";
         container.insertBefore(header, container.firstChild);
       }
     }
-    
-    // Ensure header has relative positioning
-    if (getComputedStyle(header).position === 'static') {
-      header.style.position = 'relative';
+
+    if (header) {
+      // Ensure header has relative positioning
+      if (getComputedStyle(header).position === "static") {
+        header.style.position = "relative";
+      }
+
+      // Add button to header
+      const button = createFullscreenButton();
+      button.style.cssText = `
+          position: absolute;
+          right: 0.5rem;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 10;
+        `;
+      header.appendChild(button);
+    } else {
+      // For code blocks without titles, add button as floating button
+      const copyButton = container.querySelector(".clean-btn, .copy");
+      if (copyButton) {
+        // Create a container for the fullscreen button
+        const fullscreenContainer = document.createElement("div");
+        fullscreenContainer.className = "docusaurus-fullscreen";
+        fullscreenContainer.style.cssText = `
+            position: absolute;
+            top: 3.125rem;
+            right: 0.5rem;
+            z-index: 15;
+            pointer-events: auto;
+          `;
+
+        const button = createFullscreenButton();
+        button.classList.add("docusaurus-fullscreen-button-floating");
+        button.style.cssText = `
+            width: 2rem;
+            height: 2rem;
+            padding: 0.5rem;
+            background-color: var(--ifm-color-emphasis-200);
+            border-radius: 0.375rem;
+            opacity: 0.7;
+            transition: opacity 0.2s ease, background-color 0.2s ease;
+            pointer-events: auto;
+            cursor: pointer;
+          `;
+
+        fullscreenContainer.appendChild(button);
+
+        // Insert the fullscreen button container in the same parent as copy button
+        copyButton.parentNode.appendChild(fullscreenContainer);
+      }
     }
-    
-    // Add button to header
-    const button = createFullscreenButton();
-    header.appendChild(button);
   }
 
   // Initialize fullscreen buttons for all Docusaurus code blocks
   function initializeFullscreenButtons() {
-    const codeBlocks = document.querySelectorAll(config.codeBlockSelector);
-    
-    codeBlocks.forEach(block => {
+    console.log("initializeFullscreenButtons");
+
+    // Try multiple selectors to find code blocks
+    let codeBlocks = document.querySelectorAll(
+      '[class*="codeBlockContainer_"]'
+    );
+
+    if (codeBlocks.length === 0) {
+      codeBlocks = document.querySelectorAll(".theme-code-block");
+    }
+
+    if (codeBlocks.length === 0) {
+      codeBlocks = document.querySelectorAll('pre[class*="language-"]');
+    }
+
+    if (codeBlocks.length === 0) {
+      codeBlocks = document.querySelectorAll("pre");
+    }
+
+    console.log("codeBlocks found:", codeBlocks);
+
+    // Debug: Let's see what code block elements are actually on the page
+    const allCodeElements = document.querySelectorAll('[class*="codeBlock"]');
+    console.log("All elements with codeBlock in class:", allCodeElements);
+
+    // Debug: Check for theme-code-block elements
+    const themeCodeBlocks = document.querySelectorAll(".theme-code-block");
+    console.log("theme-code-block elements:", themeCodeBlocks);
+
+    // Debug: Check for any pre elements
+    const preElements = document.querySelectorAll("pre");
+    console.log("All pre elements:", preElements);
+
+    codeBlocks.forEach((block) => {
       addFullscreenButtonToBlock(block);
     });
-    
+
     // Add event listeners to all fullscreen buttons
-    document.querySelectorAll('.docusaurus-fullscreen-button').forEach(button => {
-      // Remove existing listeners to avoid duplicates
-      const newButton = button.cloneNode(true);
-      button.parentNode.replaceChild(newButton, button);
-      
-      newButton.addEventListener('click', handleFullscreenClick);
-    });
+    document
+      .querySelectorAll(".docusaurus-fullscreen-button")
+      .forEach((button) => {
+        // Remove existing listeners to avoid duplicates
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+
+        newButton.addEventListener("click", handleFullscreenClick);
+
+        // Add keyboard support for Enter and Space keys
+        newButton.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleFullscreenClick.call(this, event);
+          }
+        });
+      });
   }
 
   function handleFullscreenClick(event) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     const codeBlockContainer = findCodeBlockContainer(this);
     if (codeBlockContainer) {
       toggleFullscreen(codeBlockContainer);
     }
   }
 
+  /**
+   * Get the current page background color.
+   * This is used to set the background color of the fullscreen container in order to match the page background color and make the fullscreen container blend in with the page.
+   *
+   * @returns {string} The background color of the page
+   */
+  function getPageBackgroundColor() {
+    // Check body background first.
+    const bodyBg = window.getComputedStyle(document.body).backgroundColor;
+    if (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)' && bodyBg !== 'transparent') {
+      return bodyBg;
+    }
+
+    // Fallback to html element.
+    const fallbackBg = window.getComputedStyle(document.documentElement).backgroundColor;
+    if (fallbackBg && fallbackBg !== 'rgba(0, 0, 0, 0)' && fallbackBg !== 'transparent') {
+      return fallbackBg;
+    }
+    // Default fallback in case no background color is found.
+    return '#ffffff';
+  }
+
+  // Get appropriate text color based on background.
+  function getContrastTextColor(backgroundColor) {
+    // Simple heuristic: if background is light, use dark text, else light text.
+    const rgb = backgroundColor.match(/\d+/g);
+    if (rgb && rgb.length >= 3) {
+      const brightness =
+        (parseInt(rgb[0]) * 299 + parseInt(rgb[1]) * 587 + parseInt(rgb[2]) * 114) / 1000;
+      return brightness > 128 ? '#000000' : '#ffffff';
+    }
+    return '#000000'; // Default to dark text.
+  }
+
   function toggleFullscreen(codeBlock) {
-    const fullscreenContainer = document.querySelector(`.${config.fullscreenContainerClass}`);
+    const fullscreenContainer = document.querySelector(
+      `.${config.fullscreenContainerClass}`
+    );
 
     if (fullscreenState.isFullscreenActive) {
       exitFullscreen(fullscreenContainer);
@@ -310,196 +450,378 @@ export default (function() {
     // Store reference and current theme
     fullscreenState.originalCodeBlock = codeBlock;
     fullscreenState.currentTheme = getCurrentTheme();
-    
+
+    // Update aria-expanded state for accessibility
+    const originalButton = codeBlock.querySelector(
+      ".docusaurus-fullscreen-button"
+    );
+    if (originalButton) {
+      originalButton.setAttribute("aria-expanded", "true");
+    }
+
     // Clone the code block
     const clonedBlock = codeBlock.cloneNode(true);
-    clonedBlock.classList.add(config.fullscreenActiveClass);
+    clonedBlock.classList.add("docusaurus-code-fullscreen-active");
 
-    // Update fullscreen container theme
-    fullscreenContainer.setAttribute('data-theme', fullscreenState.currentTheme);
+    // Update fullscreen container theme - ensure it matches the current theme
+    fullscreenContainer.setAttribute(
+      "data-theme",
+      fullscreenState.currentTheme
+    );
+    
+    // Force theme update by copying theme from document element
+    const documentTheme = document.documentElement.getAttribute("data-theme");
+    if (documentTheme) {
+      fullscreenContainer.setAttribute("data-theme", documentTheme);
+    }
+    
+    // Apply page background color to fullscreen container
+    const pageBackgroundColor = getPageBackgroundColor();
+    const textColor = getContrastTextColor(pageBackgroundColor);
+    fullscreenContainer.style.setProperty('background-color', pageBackgroundColor, 'important');
+    fullscreenContainer.style.setProperty('color', textColor, 'important');
 
     // Add event listener to exit button in fullscreen mode
-    const fullscreenButtonInClone = clonedBlock.querySelector('.docusaurus-fullscreen-button');
+    const fullscreenButtonInClone = clonedBlock.querySelector(
+      ".docusaurus-fullscreen-button"
+    );
     if (fullscreenButtonInClone) {
-      fullscreenButtonInClone.addEventListener('click', function(event) {
+      fullscreenButtonInClone.addEventListener("click", function (event) {
         event.preventDefault();
         event.stopPropagation();
         toggleFullscreen(clonedBlock);
+      });
+
+      // Add keyboard support for cloned button
+      fullscreenButtonInClone.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          toggleFullscreen(clonedBlock);
+        }
       });
     }
 
     // Save current state and enter fullscreen
     saveScrollPosition();
+    setFullscreenZoom();
     setBodyOverflow(true);
-    
+
     if (config.enableEscapeKey) addKeyupListener();
-    if (config.enableBackButton) addPopStateListener();
-    
+    if (config.exitOnBrowserBack) {
+      // Push a new history state so back button can exit fullscreen
+      history.pushState({ fullscreenActive: true }, "", window.location.href);
+      addPopStateListener();
+    }
+
     fullscreenContainer.appendChild(clonedBlock);
-    fullscreenContainer.classList.add('is-open');
+
+    // Add hint if escape key is enabled
+    if (config.enableEscapeKey) {
+      const hint = createFullscreenHint();
+      fullscreenContainer.appendChild(hint);
+
+      // Auto-hide hint after 4 seconds
+      setTimeout(() => {
+        if (hint && hint.parentNode) {
+          // Use JavaScript to fade out smoothly, overriding CSS animation
+          hint.style.setProperty(
+            "transition",
+            "opacity 0.9s ease",
+            "important"
+          );
+          hint.style.setProperty("opacity", "0", "important");
+
+          // Remove the hint completely after fade out completes
+          setTimeout(() => {
+            if (hint && hint.parentNode) {
+              hint.remove();
+            }
+          }, 500); // Wait for fade transition to complete
+        }
+      }, 4000);
+    }
+
+    fullscreenContainer.classList.add("is-open");
     fullscreenState.isFullscreenActive = true;
-    
+
     // Focus the fullscreen container for better accessibility
     fullscreenContainer.focus();
+
+    // Add focus trap for modal behavior
+    addFocusTrap(fullscreenContainer);
   }
 
   function exitFullscreen(fullscreenContainer) {
     // Restore original state
     setBodyOverflow(false);
+    restoreInitialZoom();
     restoreScrollPosition();
-    
+
     if (config.enableEscapeKey) removeKeyupListener();
-    if (config.enableBackButton) removePopStateListener();
-    
-    fullscreenContainer.classList.remove('is-open');
-    
+    if (config.exitOnBrowserBack) {
+      removePopStateListener();
+      // Only go back if we're exiting due to escape key or button click (not back button)
+      if (history.state && history.state.fullscreenActive) {
+        history.back();
+      }
+    }
+
+    // Remove focus trap
+    removeFocusTrap();
+
+    fullscreenContainer.classList.remove("is-open");
+
     // Clear container contents
     while (fullscreenContainer.firstChild) {
       fullscreenContainer.removeChild(fullscreenContainer.firstChild);
     }
-    
+
     fullscreenState.isFullscreenActive = false;
+
+    // Return focus to original code block or button (before clearing the reference)
+    if (fullscreenState.originalCodeBlock) {
+      const originalButton = fullscreenState.originalCodeBlock.querySelector(
+        ".docusaurus-fullscreen-button"
+      );
+      if (originalButton) {
+        // Restore aria-expanded state
+        originalButton.setAttribute("aria-expanded", "false");
+        // Remove focus from the button to prevent visual outline
+        originalButton.blur();
+      }
+    }
+
+    // Clear the reference after using it
     fullscreenState.originalCodeBlock = null;
     fullscreenState.currentTheme = null;
-    
-    // Return focus to original button
-    const originalButton = document.querySelector('.docusaurus-fullscreen-button');
-    if (originalButton) {
-      originalButton.focus();
+  }
+
+  /**
+   * Save the current scroll position of the page before entering fullscreen mode.
+   */
+  function saveScrollPosition() {
+    fullscreenState.scrollPosition =
+      window.scrollY || document.documentElement.scrollTop;
+  }
+
+  /**
+   * Restore the scroll position of the page after exiting fullscreen mode.
+   */
+  function restoreScrollPosition() {
+    if (
+      typeof fullscreenState.scrollPosition === "number" &&
+      !isNaN(fullscreenState.scrollPosition)
+    ) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: fullscreenState.scrollPosition,
+          behavior: "smooth",
+        });
+      }, 0);
     }
   }
 
-  function saveScrollPosition() {
-    fullscreenState.scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-  }
-
-  function restoreScrollPosition() {
-    window.scrollTo(0, fullscreenState.scrollPosition);
-  }
-
+  /**
+   * Set the body overflow to hidden when entering fullscreen mode.
+   */
   function setBodyOverflow(hidden) {
     if (hidden) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
     }
   }
 
+  /**
+   * Handle the keyup event when the escape key is pressed.
+   */
   function handleKeyup(event) {
-    if (event.key === 'Escape' && fullscreenState.isFullscreenActive) {
-      const fullscreenContainer = document.querySelector(`.${config.fullscreenContainerClass}`);
+    if (event.key === "Escape" && fullscreenState.isFullscreenActive) {
+      const fullscreenContainer = document.querySelector(
+        `.${config.fullscreenContainerClass}`
+      );
       if (fullscreenContainer) {
         exitFullscreen(fullscreenContainer);
       }
     }
   }
 
+  /**
+   * Add a listener for the keyup event when the escape key is pressed.
+   */
   function addKeyupListener() {
-    document.addEventListener('keyup', handleKeyup);
+    // Remove existing listener first to prevent duplicates
+    document.removeEventListener("keyup", handleKeyup);
+    document.addEventListener("keyup", handleKeyup);
   }
 
+  /**
+   * Remove the listener for the keyup event when the escape key is pressed.
+   */
   function removeKeyupListener() {
-    document.removeEventListener('keyup', handleKeyup);
+    document.removeEventListener("keyup", handleKeyup);
   }
 
-  function handlePopState() {
+  /**
+   * Handle the popstate event when the back button is pressed.
+   */
+  function handlePopState(event) {
     if (fullscreenState.isFullscreenActive) {
-      const fullscreenContainer = document.querySelector(`.${config.fullscreenContainerClass}`);
-      if (fullscreenContainer) {
-        exitFullscreen(fullscreenContainer);
+      // Prevent the history.back() call in exitFullscreen from causing a loop
+      const isBackButtonPressed = !event.state || !event.state.fullscreenActive;
+      if (isBackButtonPressed) {
+        const fullscreenContainer = document.querySelector(
+          `.${config.fullscreenContainerClass}`
+        );
+        if (fullscreenContainer) {
+          // Temporarily disable back button handling to prevent recursion
+          removePopStateListener();
+          exitFullscreen(fullscreenContainer);
+        }
       }
     }
   }
 
+  /**
+   * Add a listener for the popstate event when the back button is pressed.
+   */
   function addPopStateListener() {
-    window.addEventListener('popstate', handlePopState);
+    // Remove existing listener first to prevent duplicates
+    window.removeEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", handlePopState);
   }
 
+  /**
+   * Remove the listener for the popstate event when the back button is pressed.
+   */
   function removePopStateListener() {
-    window.removeEventListener('popstate', handlePopState);
+    window.removeEventListener("popstate", handlePopState);
+  }
+
+  /**
+   * Add focus trap to keep focus within the fullscreen container.
+   */
+  function addFocusTrap(container) {
+    // Get all focusable elements within the container
+    const focusableElements = container.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    function handleTabKey(event) {
+      if (event.key === "Tab") {
+        if (event.shiftKey) {
+          // Shift + Tab
+          if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          // Tab
+          if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    }
+
+    container.addEventListener("keydown", handleTabKey);
+    fullscreenState.focusTrapHandler = handleTabKey;
+  }
+
+  /**
+   * Remove focus trap.
+   */
+  function removeFocusTrap() {
+    const container = document.querySelector(
+      `.${config.fullscreenContainerClass}`
+    );
+    if (container && fullscreenState.focusTrapHandler) {
+      container.removeEventListener(
+        "keydown",
+        fullscreenState.focusTrapHandler
+      );
+      fullscreenState.focusTrapHandler = null;
+    }
   }
 
   // Handle theme changes
   function handleThemeChange() {
-    const fullscreenContainer = document.querySelector(`.${config.fullscreenContainerClass}`);
+    const fullscreenContainer = document.querySelector(
+      `.${config.fullscreenContainerClass}`
+    );
     if (fullscreenContainer) {
-      fullscreenContainer.setAttribute('data-theme', getCurrentTheme());
+      fullscreenContainer.setAttribute("data-theme", getCurrentTheme());
     }
   }
 
   // Main initialization function
   function initialize() {
-    injectStyles();
+    // Initialize zoom manager
+    zoomManager.init();
     createFullscreenContainer();
     initializeFullscreenButtons();
-    
+
     // Watch for theme changes
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "data-theme"
+        ) {
           handleThemeChange();
         }
       });
     });
-    
+
     observer.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['data-theme']
+      attributeFilter: ["data-theme"],
     });
   }
 
-  // Initialize when DOM is ready
-  function domReady(callback) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', callback);
-    } else {
-      callback();
-    }
+  // Initialize immediately
+  // initialize();
+
+  // Also try after a short delay in case content loads dynamically
+  setTimeout(() => {
+    console.log("Retrying initialization after delay...");
+    initialize();
+  }, 300);
+
+  // Handle Docusaurus client-side navigation
+  // This is essential for SPAs like Docusaurus where page changes don't trigger full reloads
+  function handleNavigation(source) {
+    // Use a longer timeout to ensure DOM is fully updated
+    setTimeout(() => {
+      initializeFullscreenButtons();
+    }, 200);
   }
 
-  // Initialize the plugin
-  domReady(initialize);
+  // Listen for browser navigation (back/forward buttons)
+  window.addEventListener("popstate", () => handleNavigation("popstate"));
 
-  // Re-initialize when new content is added (for client-side navigation)
-  const contentObserver = new MutationObserver(function(mutations) {
-    let shouldReinit = false;
-    
-    mutations.forEach(function(mutation) {
-      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        for (let node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            if (node.matches && (
-                node.matches(config.codeBlockSelector) ||
-                node.querySelector(config.codeBlockSelector)
-              )) {
-              shouldReinit = true;
-              break;
-            }
-          }
-        }
-      }
-    });
-    
-    if (shouldReinit) {
-      setTimeout(initializeFullscreenButtons, 100);
-    }
-  });
+  // Listen for programmatic navigation (link clicks, etc.)
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
 
-  // Start observing
-  domReady(function() {
-    contentObserver.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-  });
-
-  // Expose public API
-  window.DocusaurusCodeFullscreen = {
-    initialize: initialize,
-    config: config,
-    state: fullscreenState
+  history.pushState = function (...args) {
+    originalPushState.apply(this, args);
+    handleNavigation("pushState");
   };
 
+  history.replaceState = function (...args) {
+    originalReplaceState.apply(this, args);
+    handleNavigation("replaceState");
+  };
+
+  // Listen for hash changes (anchor links)
+  window.addEventListener("hashchange", () => handleNavigation("hashchange"));
 })();
