@@ -4,6 +4,7 @@
 // There are various equivalent ways to declare your Docusaurus config.
 // See: https://docusaurus.io/docs/api/docusaurus-config
 
+import path from 'path';
 import {themes as prismThemes} from 'prism-react-renderer';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
@@ -19,6 +20,7 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
+  
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -36,6 +38,16 @@ const config = {
     locales: ['en'],
   },
 
+  // plugins: [
+  //   'docusaurus-plugin-fullscreen',
+  // ],
+ // Add your plugins here
+//  plugins: [
+//   path.resolve(__dirname, '../packages/docusaurus-plugin-fullscreen/src/index.js'),
+// ],
+plugins: [
+  'docusaurus-plugin-fullscreen', // This should work with workspace:*
+],
   presets: [
     [
       'classic',
@@ -147,5 +159,4 @@ const config = {
       },
     }),
 };
-
 export default config;

@@ -7,6 +7,13 @@
     "packages/*",
     "docs"
   ],
+  "keywords": [
+    "docusaurus",
+    "plugin",
+    "fullscreen",
+    "docusaurus-plugin-fullscreen",
+    "code-block-fullscreen"
+  ],
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r dev",
@@ -20,6 +27,6 @@
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
-  },
-  "packageManager": "pnpm@8.15.0"
+  },  
+  "packageManager": "pnpm@10.10.0"
 } 

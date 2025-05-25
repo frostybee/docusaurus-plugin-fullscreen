@@ -3,18 +3,13 @@
  * @param {Object} options - Plugin options
  * @returns {import('@docusaurus/types').Plugin}
  */
-function pluginFullscreen(context, options = {}) {
+import path from 'path';
+module.exports = function (context, options = {}) {
   return {
     name: 'docusaurus-plugin-fullscreen',
-    
     getClientModules() {
-      return [];
-    },
-    
-    configureWebpack() {
-      return {};
-    },
+      return [path.resolve(__dirname, './fullscreen-plugin.js')];
+    },         
   };
 }
 
-module.exports = pluginFullscreen; 

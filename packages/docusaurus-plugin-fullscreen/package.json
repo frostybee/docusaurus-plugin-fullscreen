@@ -1,11 +1,12 @@
 {
   "name": "docusaurus-plugin-fullscreen",
   "version": "1.0.0",
-  "description": "A Docusaurus plugin for fullscreen functionality",
+  "description": "A Docusaurus plugin for adding fullscreen functionality to code blocks",
   "main": "src/index.js",
   "files": [
     "src"
   ],
+  "type": "module",  
   "scripts": {
     "build": "echo 'No build step needed for JavaScript'",
     "dev": "echo 'Development mode'",
@@ -31,5 +32,18 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "packageManager": "pnpm@10.10.0",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "sideEffects": false,
+  "homepage": "https://github.com/frostybee/docusaurus-plugin-fullscreen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frostybee/docusaurus-plugin-fullscreen.git",
+    "directory": "packages/docusaurus-plugin-fullscreen"
+  },
+  "bugs": "https://github.com/frostybee/docusaurus-plugin-fullscreen/issues"
 } 
