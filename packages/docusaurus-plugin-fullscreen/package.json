@@ -15,7 +15,9 @@
   "keywords": [
     "docusaurus",
     "plugin",
-    "fullscreen"
+    "fullscreen",
+    "docusaurus-plugin-fullscreen",
+    "code-block-fullscreen"
   ],
   "author": "",
   "license": "MIT",
