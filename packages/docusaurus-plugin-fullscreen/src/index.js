@@ -3,23 +3,21 @@
  * @param {Object} options - Plugin options
  * @returns {import('@docusaurus/types').Plugin}
  */
-const path = require('path');
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-module.exports = function (context, options = {}) {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default function (context, options = {}) {
   return {
     name: 'docusaurus-plugin-fullscreen',
     
-    getClientModules() {
+    getClientModules() {      
       return [
         path.resolve(__dirname, './fullscreen-plugin.js'),
-        path.resolve(__dirname, './fullscreen.module.css'),
-      ];
-    },    
-    getStylesheets() {
-      const cssPath = path.resolve(__dirname, "./fullscreen.module.css");
-      console.log('🎨 CSS path:', cssPath); // Debug log
-      return [cssPath];
-    },
+        path.resolve(__dirname, './styles/fullscreen.css')];
+    },   
     
   };
-};
+}

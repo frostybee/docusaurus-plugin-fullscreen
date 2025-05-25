@@ -3,8 +3,6 @@
  * This module adds fullscreen functionality to code blocks
  */
 
-import './fullscreen.module.css';
-
 (function () {
   "use strict";
   
