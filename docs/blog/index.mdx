@@ -1,0 +1,99 @@
+---
+slug: introducing-fullscreen-plugin
+title: Introducing the Docusaurus Fullscreen Plugin
+authors: [frostybee]
+tags: [plugin, documentation]
+---
+
+{/* truncate */}
+
+## What is the Fullscreen Plugin?
+
+The Docusaurus Fullscreen Plugin enhances your documentation experience by adding fullscreen viewing capabilities to code blocks and content. 
+
+This documentation site demonstrates the plugin in action, with every code block having fullscreen functionality enabled. You can try clicking the fullscreen button on any code snippet to experience the enhanced viewing capabilities!
+
+## Key Features
+
+The initial version of our fullscreen plugin includes:
+
+### **Code Block Fullscreen**
+- **One-click fullscreen**: Click the fullscreen button on any code block to expand it to full screen
+- **Enhanced readability**: Perfect for viewing long code snippets without scrolling
+- **Keyboard shortcuts**: Use `Esc` to exit fullscreen mode
+- **Responsive design**: Works seamlessly across desktop and mobile devices
+
+## Installation
+
+Getting started is simple:
+
+```bash
+npm install docusaurus-plugin-fullscreen
+# or
+yarn add docusaurus-plugin-fullscreen
+# or
+pnpm add docusaurus-plugin-fullscreen
+```
+
+Add the plugin to your `docusaurus.config.js`:
+
+```js
+module.exports = {
+  plugins: [
+    'docusaurus-plugin-fullscreen'
+  ],
+};
+```
+
+## Try It Out
+
+Notice the fullscreen button in the top-right corner of the code block above! Click it to experience the fullscreen view.
+
+Here's an example code block with fullscreen functionality enabled:
+
+```javascript
+// Example: React component with hooks
+import React, { useState, useEffect } from 'react';
+
+function ExampleComponent() {
+  const [count, setCount] = useState(0);
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    // Fetch data when component mounts
+    fetchData().then(setData);
+  }, []);
+
+  const handleIncrement = () => {
+    setCount(prevCount => prevCount + 1);
+  };
+
+  return (
+    <div className="example-component">
+      <h2>Counter: {count}</h2>
+      <button onClick={handleIncrement}>
+        Increment
+      </button>
+      {data && (
+        <div className="data-display">
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ExampleComponent;
+```
+
+
+
+## Get Involved
+
+We'd love your feedback and contributions! Check out our [GitHub repository](https://github.com/frostybee/docusaurus-plugin-fullscreen) to:
+
+- Report issues or request features
+- Contribute code improvements
+- Share your use cases and experiences
+
+---

@@ -16,7 +16,7 @@ export default function (context, options = {}) {
     getClientModules() {      
       return [
         path.resolve(__dirname, './fullscreen-plugin.js'),
-        path.resolve(__dirname, './styles/fullscreen.css')
+        path.resolve(__dirname, './styles/codeblock-fullscreen.css')
       ];
     },
     

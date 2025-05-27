@@ -17,7 +17,7 @@ module.exports = {
         exitOnBrowserBack: true,
         
         // Whether to add fullscreen buttons to code blocks without titles
-        addToFramelessBlocks: true,
+        addToUntitledBlocks: true,
         
         // Zoom level when in fullscreen mode (percentage)
         fullscreenZoomLevel: 120,

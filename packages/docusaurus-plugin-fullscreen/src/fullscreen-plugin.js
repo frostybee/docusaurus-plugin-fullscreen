@@ -11,7 +11,7 @@ class DocusaurusCodeFullscreen {
       fullscreenContainerClass: "docusaurus-code-fullscreen-container",
       enableEscapeKey: true,
       exitOnBrowserBack: true,
-      addToFramelessBlocks: true,
+      addToUntitledBlocks: true,
       fullscreenZoomLevel: 150,
       animationDuration: 150,
       svgPathFullscreenOn:
@@ -229,7 +229,7 @@ class DocusaurusCodeFullscreen {
         header.textContent = title;
         header.style.position = "relative";
         container.insertBefore(header, container.firstChild);
-      } else if (hasHeaderArea || this.config.addToFramelessBlocks) {
+      } else if (hasHeaderArea || this.config.addToUntitledBlocks) {
         // Create minimal header for button placement
         header = document.createElement("div");
         header.className = "docusaurus-fullscreen-header";

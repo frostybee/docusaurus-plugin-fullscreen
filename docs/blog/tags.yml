@@ -1,6 +1,11 @@
-fullscreen:
-  label: Fullscreen
-  permalink: /fullscreen
-  description: Fullscreen tag description
+plugin:
+  label: Plugin
+  permalink: /plugin
+  description: Plugin development, features, and announcements
+
+documentation:
+  label: Documentation
+  permalink: /documentation
+  description: Documentation guides and best practices
 
 

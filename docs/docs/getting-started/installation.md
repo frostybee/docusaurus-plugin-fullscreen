@@ -1,10 +1,10 @@
 ---
 title: Installation
 description: Learn how to install and set up the docusaurus-plugin-fullscreen in your Docusaurus site.
-order: 1
+sidebar_position: 1
 ---
 
-# Installation
+## Installation
 
 Add fullscreen functionality to code blocks in your Docusaurus documentation website. This plugin enhances your code blocks by adding a fullscreen toggle button that allows users to view code in an immersive fullscreen mode.
 
@@ -14,7 +14,7 @@ You will need to have a Docusaurus website set up. If you don't have one yet, yo
 
 **Requirements:**
 - Node.js 18.0 or higher
-- Docusaurus 3.0 or higher
+- Docusaurus 3.4 or higher
 - React 18.0 or higher
 
 ## Installation Steps
@@ -73,7 +73,7 @@ module.exports = {
         fullscreenButtonTooltip: 'View in fullscreen',
         enableEscapeKey: true,
         exitOnBrowserBack: true,
-        addToFramelessBlocks: true,
+        addToUntitledBlocks: true,
         fullscreenZoomLevel: 150,
         animationDuration: 200,
       },
@@ -90,17 +90,20 @@ module.exports = {
 Once installed, the plugin will automatically add fullscreen functionality to your code blocks:
 
 ### Automatic Enhancement
+
 - **Fullscreen buttons**: Added to all code blocks automatically
 - **Theme integration**: Inherits your site's theme colors and styling
 - **Responsive design**: Works on all screen sizes and devices
 
 ### User Experience
+
 - **Click to expand**: Users can click the fullscreen button to expand code blocks
 - **Keyboard navigation**: Tab through code blocks and press Enter to activate fullscreen
 - **Multiple exit options**: Escape key, browser back button, or click the exit button
 - **Smooth animations**: Elegant transitions when entering/exiting fullscreen mode
 
 ### Accessibility Features
+
 - **ARIA labels**: Proper accessibility labels for screen readers
 - **Focus management**: Maintains focus context and provides proper focus restoration
 - **Keyboard support**: Full keyboard navigation support
@@ -124,14 +127,6 @@ If you encounter build errors:
 1. **Check Node.js version**: Ensure you're using Node.js 18.0 or higher
 2. **Update dependencies**: Make sure all dependencies are up to date
 3. **Check for conflicts**: Ensure no other plugins conflict with this one
-
-### Browser Compatibility
-
-The plugin supports all modern browsers:
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
 
 ## Next Steps
 

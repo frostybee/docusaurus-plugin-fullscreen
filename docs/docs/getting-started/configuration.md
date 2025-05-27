@@ -1,10 +1,10 @@
 ---
 title: Configuration
 description: Configure the docusaurus-plugin-fullscreen plugin with various options to customize the fullscreen functionality.
-order: 2
+sidebar_position: 2
 ---
 
-# Configuration
+## Configuration
 
 The Docusaurus Code Block Fullscreen plugin provides several configuration options to customize the fullscreen functionality for your code blocks. You can easily adjust these settings to fit your website's needs and user experience preferences.
 
@@ -70,15 +70,15 @@ The plugin accepts an object with the following options. All options are optiona
 }
 ```
 
-### `addToFramelessBlocks`
+### `addToUntitledBlocks`
 
 - **Type**: `boolean`
 - **Default**: `true`
-- **Description**: Controls whether the fullscreen button should be added to frameless code blocks (blocks without titles). Set to `true` to add buttons to all code blocks including frameless ones, or `false` to add buttons only to titled code blocks.
+- **Description**: Controls whether the fullscreen button should be added to untitled code blocks (blocks without titles). Set to `true` to add buttons to all code blocks including untitled ones, or `false` to add buttons only to titled code blocks.
 
 ```js title="docusaurus.config.js"
 {
-  addToFramelessBlocks: false // Only add buttons to titled code blocks
+  addToUntitledBlocks: false // Only add buttons to titled code blocks
 }
 ```
 
@@ -165,8 +165,8 @@ module.exports = {
         // Enable/disable browser back button to exit fullscreen
         exitOnBrowserBack: true,
         
-        // Add fullscreen buttons to all code blocks (including frameless)
-        addToFramelessBlocks: true,
+        // Add fullscreen buttons to all code blocks (including untitled)
+        addToUntitledBlocks: true,
         
         // Zoom level when in fullscreen mode (120% zoom)
         fullscreenZoomLevel: 120,
