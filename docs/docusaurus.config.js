@@ -11,20 +11,20 @@ import { themes as prismThemes } from "prism-react-renderer";
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "My Site",
-  tagline: "Dinosaurs are cool",
-  favicon: "img/favicon.ico",
+  title: "Docusaurus Code Block Fullscreen",
+  tagline: "Add fullscreen functionality to code blocks in your Docusaurus documentation.",
+  favicon: "img/fullscreen.svg",
 
   // Set the production url of your site here
-  url: "https://your-docusaurus-site.example.com",
+  url: "https://frostybee.github.io",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/",
+  baseUrl: "/docusaurus-plugin-fullscreen/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: "facebook", // Usually your GitHub org/user name.
-  projectName: "docusaurus", // Usually your repo name.
+  organizationName: "frostybee", // Usually your GitHub org/user name.
+  projectName: "docusaurus-plugin-fullscreen", // Usually your repo name.
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -49,7 +49,7 @@ const config = {
       'docusaurus-plugin-fullscreen',
       {
         // Custom tooltip text for the fullscreen button
-        fullscreenButtonTooltip: "Enter fullscreen mode",
+        fullscreenButtonTooltip: "Toggle fullscreen mode",
         
         // Whether to enable ESC key to exit fullscreen
         enableEscapeKey: true,
@@ -82,10 +82,7 @@ const config = {
       ({
         docs: {
           sidebarPath: "./sidebars.js",
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+          // Please change this to your repo.          
         },
         blog: {
           showReadingTime: true,
@@ -93,10 +90,7 @@ const config = {
             type: ["rss", "atom"],
             xslt: true,
           },
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+          // Please change this to your repo.          
           // Useful options to enforce blogging best practices
           onInlineTags: "warn",
           onInlineAuthors: "warn",
@@ -115,21 +109,21 @@ const config = {
       // Replace with your project's social card
       image: "img/docusaurus-social-card.jpg",
       navbar: {
-        title: "My Site",
+        title: "Docusaurus Code Block Fullscreen",
         logo: {
-          alt: "My Site Logo",
-          src: "img/logo.svg",
+          alt: "Docusaurus Code Block Fullscreen",
+          src: "img/fullscreen.svg",
         },
         items: [
           {
             type: "docSidebar",
-            sidebarId: "tutorialSidebar",
+            sidebarId: "docSidebar",
             position: "left",
-            label: "Tutorial",
+            label: "Docs",
           },
-          { to: "/blog", label: "Blog", position: "left" },
+          { to: "/blog", label: "Changelog", position: "left" },
           {
-            href: "https://github.com/facebook/docusaurus",
+            href: "https://github.com/frostybee/docusaurus-plugin-fullscreen",
             label: "GitHub",
             position: "right",
           },
@@ -142,43 +136,26 @@ const config = {
             title: "Docs",
             items: [
               {
-                label: "Tutorial",
-                to: "/docs/intro",
+                label: "Docs",
+                to: "/docs",
               },
             ],
-          },
-          {
-            title: "Community",
-            items: [
-              {
-                label: "Stack Overflow",
-                href: "https://stackoverflow.com/questions/tagged/docusaurus",
-              },
-              {
-                label: "Discord",
-                href: "https://discordapp.com/invite/docusaurus",
-              },
-              {
-                label: "X",
-                href: "https://x.com/docusaurus",
-              },
-            ],
-          },
+          },          
           {
             title: "More",
             items: [
               {
-                label: "Blog",
+                label: "Changelog",
                 to: "/blog",
               },
               {
                 label: "GitHub",
-                href: "https://github.com/facebook/docusaurus",
+                href: "https://github.com/frostybee/docusaurus-plugin-fullscreen",
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Docusaurus Code Block Fullscreen Plugin. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,
