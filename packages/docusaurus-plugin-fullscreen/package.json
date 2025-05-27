@@ -1,6 +1,6 @@
 {
   "name": "docusaurus-plugin-fullscreen",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A Docusaurus plugin for adding fullscreen functionality to code blocks",
   "main": "src/index.js",
   "files": [
