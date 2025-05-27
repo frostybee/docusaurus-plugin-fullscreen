@@ -6,7 +6,6 @@
   "files": [
     "src"
   ],
-  "type": "module",  
   "scripts": {
     "build": "echo 'No build step needed for JavaScript'",
     "dev": "echo 'Development mode'",

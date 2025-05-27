@@ -3,13 +3,9 @@
  * @param {Object} options - Plugin options
  * @returns {import('@docusaurus/types').Plugin}
  */
-import path from 'path';
-import { fileURLToPath } from 'url';
+const path = require('path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export default function (context, options = {}) {
+module.exports = function (context, options = {}) {
   return {
     name: 'docusaurus-plugin-fullscreen',
     
@@ -47,4 +43,4 @@ export default function (context, options = {}) {
       };
     },
   };
-}
+};

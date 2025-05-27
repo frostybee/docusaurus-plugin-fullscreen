@@ -748,6 +748,11 @@ class DocusaurusCodeFullscreen {
 (function () {
   "use strict";
   
+  // Only run in browser environment
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return;
+  }
+  
   // Check if we're in a Docusaurus environment
   if (
     !document.querySelector("[data-theme]") &&
