@@ -7,7 +7,9 @@ slug: /
 
 ## What is this plugin?
 
-The Docusaurus Code Block Fullscreen plugin adds a fullscreen toggle button to code blocks in your documentation, allowing users to view code in an immersive, distraction-free fullscreen mode. This is particularly useful for:
+The Docusaurus Code Block Fullscreen plugin adds a fullscreen toggle button to code blocks in your documentation, allowing users to view code in an immersive, distraction-free fullscreen mode.
+
+This is particularly useful for:
 
 - **Long code examples** that don't fit well in the normal page layout
 - **Complex code snippets** that benefit from larger viewing area
