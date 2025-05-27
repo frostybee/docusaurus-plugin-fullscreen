@@ -1,53 +1,86 @@
-# Docusaurus Fullscreen Plugin Monorepo
+# Docusaurus Fullscreen Plugin
 
-A pnpm monorepo containing a Docusaurus fullscreen plugin and its documentation.
+A Docusaurus plugin that adds fullscreen functionality to code blocks, allowing users to view code in an immersive, distraction-free fullscreen mode.
 
-## Structure
+## Installation
 
-- `packages/docusaurus-plugin-fullscreen/` - The Docusaurus plugin implementation
-- `docs/` - Docusaurus documentation site that uses the plugin
+Install the plugin using your preferred package manager:
 
-## Prerequisites
+```bash
+npm install docusaurus-plugin-fullscreen
+```
+
+```bash
+yarn add docusaurus-plugin-fullscreen
+```
+
+```bash
+pnpm add docusaurus-plugin-fullscreen
+```
+
+## Usage
+
+Add the plugin to your `docusaurus.config.js`:
+
+```js
+module.exports = {
+  // ... other config
+  plugins: [
+    'docusaurus-plugin-fullscreen',
+  ],
+  // ... rest of your config
+};
+```
+
+## Configuration
+
+The plugin can be configured with custom options:
+
+```js
+module.exports = {
+  // ... other config
+  plugins: [
+    [
+      'docusaurus-plugin-fullscreen',
+      {
+        // Custom configuration options
+        fullscreenButtonTooltip: 'Toggle fullscreen mode',
+        enableEscapeKey: true,
+        exitOnBrowserBack: true,
+        addToUntitledBlocks: true,
+        fullscreenZoomLevel: 120,
+        animationDuration: 200,
+      },
+    ],
+  ],
+  // ... rest of your config
+};
+```
+
+## Requirements
 
 - Node.js 18.0 or higher
-- pnpm 8.0 or higher
+- Docusaurus 3.0 or higher
+- React 18.0 or higher
 
-## Getting Started
 
-1. Install dependencies:
-   ```bash
-   pnpm install
-   ```
+## Documentation
 
-2. Start the development server for the docs:
-   ```bash
-   cd docs
-   pnpm start
-   ```
+For comprehensive documentation and examples, visit the [plugin documentation](https://frostybee.github.io/starlight-codeblock-fullscreen/).
 
-3. Build all packages:
-   ```bash
-   pnpm build
-   ```
+## Contributing
 
-## Development
-
-### Plugin Development
-
-The plugin is located in `packages/docusaurus-plugin-fullscreen/`. It's written in JavaScript and doesn't require a build step.
-
-### Documentation
-
-The documentation site is in the `docs/` folder and uses the local plugin via workspace dependencies.
-
-## Scripts
-
-- `pnpm build` - Build all packages
-- `pnpm dev` - Start development mode for all packages
-- `pnpm clean` - Clean all packages
-- `pnpm lint` - Lint all packages
-- `pnpm test` - Test all packages
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 
-MIT
+Licensed under the MIT License, Copyright © frostybee.
+
+See [LICENSE](/LICENSE) for more information.
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/frostybee/docusaurus-plugin-fullscreen)
+- [npm Package](https://www.npmjs.com/package/docusaurus-plugin-fullscreen)
+- [Documentation](https://frostybee.github.io/docusaurus-plugin-fullscreen/)
+- [Issues](https://github.com/frostybee/docusaurus-plugin-fullscreen/issues)
